@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+langchain
+langchain-community
+langchain-ollama
+httpx
+redis
+pydantic
+pydantic-settings
+python-jose[cryptography]
+scikit-learn
+joblib
+numpy
+pandas

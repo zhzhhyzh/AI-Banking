@@ -1,0 +1,34 @@
+# ── Secrets & Environment ──
+.env
+banking-core/src/main/resources/application-local.yml
+
+# ── Java / Spring Boot ──
+banking-core/target/
+*.class
+*.jar
+!banking-core/.mvn/wrapper/maven-wrapper.jar
+
+# ── Python ──
+__pycache__/
+*.pyc
+*.pyo
+agent-orchestrator/venv/
+*.pkl
+
+# ── Node / React ──
+banking-ui/node_modules/
+banking-ui/dist/
+
+# ── IDE ──
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Screenshots ──
+*.png
