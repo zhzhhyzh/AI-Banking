@@ -1,11 +1,10 @@
 """
-Agent Orchestrator - LangChain agent with Ollama LLM and banking tools.
+Agent Orchestrator - LangChain agent with Ollama/Groq LLM and banking tools.
 """
 
 import json
 from typing import Optional
 
-from langchain_ollama import ChatOllama
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
@@ -17,13 +16,27 @@ from services.auth_service import get_chat_history, store_chat_history
 from config import settings
 
 
+def _get_llm():
+    """Create the LLM instance based on configured provider."""
+    if settings.llm_provider == "groq":
+        from langchain_groq import ChatGroq
+        return ChatGroq(
+            model=settings.groq_model,
+            api_key=settings.groq_api_key,
+            temperature=0.1,
+        )
+    else:
+        from langchain_ollama import ChatOllama
+        return ChatOllama(
+            model=settings.ollama_model,
+            base_url=settings.ollama_base_url,
+            temperature=0.1,
+        )
+
+
 def _build_agent() -> AgentExecutor:
-    """Build the LangChain agent with Ollama and banking tools."""
-    llm = ChatOllama(
-        model=settings.ollama_model,
-        base_url=settings.ollama_base_url,
-        temperature=0.1,
-    )
+    """Build the LangChain agent with configured LLM and banking tools."""
+    llm = _get_llm()
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),

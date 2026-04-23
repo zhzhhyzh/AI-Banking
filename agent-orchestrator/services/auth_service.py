@@ -6,12 +6,16 @@ import redis
 from config import settings
 
 # Redis client for session storage
-redis_client = redis.Redis(
-    host=settings.redis_host,
-    port=settings.redis_port,
-    db=settings.redis_db,
-    decode_responses=True,
-)
+# Supports REDIS_URL (Upstash/production) or host/port (local)
+if settings.redis_url:
+    redis_client = redis.from_url(settings.redis_url, decode_responses=True)
+else:
+    redis_client = redis.Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        db=settings.redis_db,
+        decode_responses=True,
+    )
 
 
 def store_session(session_id: str, token: str, username: str, user_id: int) -> None:
