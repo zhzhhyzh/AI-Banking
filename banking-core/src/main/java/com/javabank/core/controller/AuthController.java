@@ -53,20 +53,11 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        // Ensure email has been verified before allowing registration
-        if (!emailVerificationService.hasVerifiedCode(request.getEmail())) {
-            throw new IllegalArgumentException(
-                    "Email not verified. Please verify your email before registering.");
-        }
-
         User user = userService.register(request);
         String token = jwtTokenProvider.generateToken(user.getUsername(), user.getId());
 
-        // Clean up verification codes after successful registration
-        emailVerificationService.cleanupCodes(request.getEmail());
-
         auditService.logAction(user.getId(), "USER_REGISTERED", "New user registration",
-                "User " + user.getUsername() + " registered successfully (email verified)");
+                "User " + user.getUsername() + " registered successfully");
 
         return ResponseEntity.ok(AuthResponse.builder()
                 .token(token)

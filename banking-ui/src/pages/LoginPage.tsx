@@ -41,7 +41,7 @@ export default function LoginPage({ onSwitchToRegister }: LoginPageProps) {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600/20 mb-4">
             <Landmark className="w-8 h-8 text-blue-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white">JavaBank</h1>
+          <h1 className="text-3xl font-bold text-white">ZHYBank</h1>
           <p className="text-gray-400 mt-2">AI-Managed Banking</p>
         </div>
 

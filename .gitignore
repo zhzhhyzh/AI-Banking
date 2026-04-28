@@ -1,34 +1,74 @@
 # ── Secrets & Environment ──
 .env
+.env.*
+!.env.example
 banking-core/src/main/resources/application-local.yml
+banking-core/src/main/resources/application-*.yml
+!banking-core/src/main/resources/application.yml
 
 # ── Java / Spring Boot ──
 banking-core/target/
+**/target/
 *.class
 *.jar
 !banking-core/.mvn/wrapper/maven-wrapper.jar
+HELP.md
+.mvn/wrapper/maven-wrapper.properties.bak
+spring-shell.log
+hs_err_pid*.log
+replay_pid*.log
 
 # ── Python ──
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
 agent-orchestrator/venv/
+agent-orchestrator/.venv/
+**/.venv/
+**/venv/
 *.pkl
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+.tox/
 
-# ── Node / React ──
+# ── Node / React / Vite ──
 banking-ui/node_modules/
 banking-ui/dist/
+banking-ui/dist-ssr/
+banking-ui/.vite/
+**/node_modules/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
 
 # ── IDE ──
 .idea/
 *.iml
 .vscode/
+!.vscode/extensions.json
+.qoder/
 *.swp
 *.swo
 
 # ── OS ──
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Logs ──
+*.log
+logs/
 
 # ── Screenshots ──
 *.png

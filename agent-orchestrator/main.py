@@ -11,8 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from agent.orchestrator import run_agent
-from services.banking_client import BankingClient
+from services.banking_client import BankingClient, BankingApiError
 from services.auth_service import store_session, get_session
+from config import settings
 
 app = FastAPI(
     title="JavaBank Agent Orchestrator",
@@ -83,8 +84,10 @@ async def send_verification(request: SendVerificationRequest):
     client = BankingClient()
     try:
         result = await client.send_verification(email=request.email)
+    except BankingApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=502, detail=f"Banking core unreachable: {e}")
     return result
 
 
@@ -94,8 +97,10 @@ async def verify_email(request: VerifyEmailRequest):
     client = BankingClient()
     try:
         result = await client.verify_email(email=request.email, code=request.code)
+    except BankingApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=502, detail=f"Banking core unreachable: {e}")
     return result
 
 
@@ -110,8 +115,10 @@ async def register(request: RegisterRequest):
             password=request.password,
             phone=request.phone,
         )
+    except BankingApiError as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=502, detail=f"Banking core unreachable: {e}")
 
     session_id = str(uuid.uuid4())
     store_session(session_id, result["token"], result["username"], result["userId"])
@@ -130,8 +137,13 @@ async def login(request: LoginRequest):
     client = BankingClient()
     try:
         result = await client.login(request.username, request.password)
+    except BankingApiError as e:
+        # Spring Boot returns 401 with an empty body for bad credentials;
+        # fall back to a sensible default message.
+        detail = e.message or "Invalid credentials"
+        raise HTTPException(status_code=e.status_code, detail=detail)
     except Exception as e:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=502, detail=f"Banking core unreachable: {e}")
 
     session_id = str(uuid.uuid4())
     store_session(session_id, result["token"], result["username"], result["userId"])

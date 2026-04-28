@@ -3,6 +3,35 @@ from typing import Optional
 from config import settings
 
 
+class BankingApiError(Exception):
+    """Raised when the Spring Boot Banking Core returns a non-2xx response.
+    Carries the upstream status code and parsed error message so the
+    FastAPI layer can surface them to the UI verbatim."""
+
+    def __init__(self, status_code: int, message: str):
+        super().__init__(message)
+        self.status_code = status_code
+        self.message = message
+
+
+def _raise_for_status(resp: httpx.Response) -> None:
+    """Replace httpx's generic raise_for_status with one that extracts
+    the Spring Boot GlobalExceptionHandler JSON body ({status, message, timestamp})
+    and exposes a meaningful message."""
+    if resp.is_success:
+        return
+    message: str
+    try:
+        body = resp.json()
+        if isinstance(body, dict):
+            message = body.get("message") or body.get("error") or body.get("detail") or resp.text
+        else:
+            message = resp.text or f"HTTP {resp.status_code}"
+    except Exception:
+        message = resp.text or f"HTTP {resp.status_code}"
+    raise BankingApiError(resp.status_code, message.strip())
+
+
 class BankingClient:
     """Async HTTP client that wraps every Spring Boot Banking Core endpoint."""
 
@@ -26,7 +55,7 @@ class BankingClient:
                 json=payload,
                 headers={"Content-Type": "application/json"},
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def send_verification(self, email: str) -> dict:
@@ -36,7 +65,7 @@ class BankingClient:
                 json={"email": email},
                 headers={"Content-Type": "application/json"},
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def verify_email(self, email: str, code: str) -> dict:
@@ -46,7 +75,7 @@ class BankingClient:
                 json={"email": email, "code": code},
                 headers={"Content-Type": "application/json"},
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def login(self, username: str, password: str) -> dict:
@@ -56,7 +85,7 @@ class BankingClient:
                 json={"username": username, "password": password},
                 headers={"Content-Type": "application/json"},
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def create_account(self, account_type: str, currency: str = "USD") -> dict:
@@ -66,7 +95,7 @@ class BankingClient:
                 json={"accountType": account_type, "currency": currency},
                 headers=self._headers(),
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def get_accounts(self) -> list:
@@ -75,7 +104,7 @@ class BankingClient:
                 f"{self.base_url}/accounts",
                 headers=self._headers(),
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def get_account(self, account_id: int) -> dict:
@@ -84,7 +113,7 @@ class BankingClient:
                 f"{self.base_url}/accounts/{account_id}",
                 headers=self._headers(),
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def transfer_funds(
@@ -116,7 +145,7 @@ class BankingClient:
                 json=payload,
                 headers=self._headers(),
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def confirm_transfer(self, transaction_id: int) -> dict:
@@ -125,7 +154,7 @@ class BankingClient:
                 f"{self.base_url}/transactions/{transaction_id}/confirm",
                 headers=self._headers(),
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
 
     async def get_transactions(self) -> list:
@@ -134,5 +163,5 @@ class BankingClient:
                 f"{self.base_url}/transactions",
                 headers=self._headers(),
             )
-            resp.raise_for_status()
+            _raise_for_status(resp)
             return resp.json()
